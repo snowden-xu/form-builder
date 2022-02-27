@@ -69,10 +69,58 @@ const App = (props: any) => {
       },
     ],
   };
+
+  const arr = [
+    {
+      name: 'sponsor',
+      tableId: '111',
+      dispType: 'SINGLE_SELECT',
+      hintMsg: 'toolTip',
+      required: 0,
+      maxLength: null,
+      readOnly: 1,
+      dictionaryEntries: [
+        { value: '1', label: 'apple2' },
+        { value: '2', label: 'orange2' },
+      ],
+      valueType: 'TEXT',
+      i18nValue: '申办方',
+    },
+  ];
+
+  const componentMap: any = {
+    SINGLE_LINE_TEXT: 'input',
+    SINGLE_SELECT: 'select',
+    MULTI_SELECT: 'select',
+  };
+
+  const getComponentProps = (dispType) => {
+    if (dispType === 'MULTI_SELECT') {
+      return { mode: 'multiple' };
+    }
+    return null;
+  };
+
+  const newArr = arr.map((item) => {
+    return {
+      label: item.i18nValue, // i18nValue
+      key: item.name, // name
+      component: componentMap[item.dispType], // dispType
+      required: Boolean(item.required), // required
+      tooltip: item.hintMsg, // hintMsg
+      options: item.dictionaryEntries, // dictionaryEntries
+      componentProps: {
+        ...getComponentProps(item.dispType),
+      }, // dispType
+    };
+  });
+
+  console.log(newArr, 'newArr');
+
   return (
     <div style={{ width: 500, margin: '0 auto' }}>
       <Form>
-        <FormBuilder form={props.form} config={formConfig} initialValues={{}} />
+        <FormBuilder form={props.form} config={{ fields: newArr }} initialValues={{}} />
       </Form>
       <Button onClick={handleSubmit}>submit</Button>
     </div>

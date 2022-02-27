@@ -6,16 +6,16 @@ import { Input, InputNumber, Select } from 'antd';
 import FormBuilder from './FormBuilder';
 
 // 单行文本
-FormBuilder.defineComponent('SINGLE_LINE_TEXT', Input);
+FormBuilder.defineComponent('input', Input);
 
 // 多行文本
-FormBuilder.defineComponent('MULTI_LINE_TEXT', Input.TextArea);
+FormBuilder.defineComponent('textArea', Input.TextArea);
 
 // 数字输入框
-FormBuilder.defineComponent('SINGLE_LINE_NUMBER', InputNumber);
+FormBuilder.defineComponent('number', InputNumber);
 
-// 下拉框（单选）
-FormBuilder.defineComponent('DROPDOWN', Select , (field)=>{
+// 下拉框
+FormBuilder.defineComponent('select', Select, (field) => {
   if (field.options && !field.children) {
     return {
       ...field,
@@ -24,37 +24,7 @@ FormBuilder.defineComponent('DROPDOWN', Select , (field)=>{
           {opt.children || opt.label}
         </Select.Option>
       )),
-    }
+    };
   }
-  return field
+  return field;
 });
-
-// 单选下拉框
-FormBuilder.defineComponent('SINGLE_SELECT', Select, (field) => {
-  if (field.options && !field.children) {
-    return {
-      ...field,
-      children: field.options.map((opt) => (
-        <Select.Option label={opt.label} value={opt.value} key={opt.value} disabled={opt.disabled}>
-          {opt.children || opt.label}
-        </Select.Option>
-      )),
-    }
-  }
-  return field
-})
-
-// 多选下拉框
-FormBuilder.defineComponent('MULTI_SELECT',  Select, (field) => {
-  if (field.options && !field.children) {
-    return {
-      ...field,
-      children: field.options.map((opt) => (
-        <Select.Option label={opt.label} value={opt.value} key={opt.value} disabled={opt.disabled}>
-          {opt.children || opt.label}
-        </Select.Option>
-      )),
-    }
-  }
-  return field
-})

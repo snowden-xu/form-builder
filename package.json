@@ -8,11 +8,6 @@
     "start": "webpack-dev-server --config config/webpack.dev.js --progress",
     "test": "eslint --ext .tsx,.ts --fix ./src"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm test"
-    }
-  },
   "dependencies": {
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
