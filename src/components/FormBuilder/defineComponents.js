@@ -1,6 +1,6 @@
 // 第三方
 import React from 'react';
-import { Input, InputNumber, Select } from 'antd';
+import { Input, InputNumber, Select, DatePicker } from 'antd';
 
 // 自定义
 import FormBuilder from './FormBuilder';
@@ -28,3 +28,6 @@ FormBuilder.defineComponent('select', Select, (field) => {
   }
   return field;
 });
+
+// 日期
+FormBuilder.defineComponent('date-picker', DatePicker)
