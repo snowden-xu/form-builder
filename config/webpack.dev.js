@@ -17,23 +17,23 @@ module.exports = merge(common, {
           'style-loader',
           {
             loader: 'css-loader',
-            options: {
-              modules: {
-                // 自定义css名称
-                getLocalIdent: (context, localIdentName, localName) => {
-                  const match = context.resourcePath.match(/src(.*)/);
-                  if (match && match[1]) {
-                    const antdProPath = match[1].replace('.less', '');
-                    const arr = slash(antdProPath)
-                      .split('/')
-                      .map((a) => a.replace(/([A-Z])/g, '-$1'))
-                      .map((a) => a.toLowerCase());
-                    return `${'demo'}${arr.join('-')}-${localName}`.replace(/--/g, '-');
-                  }
-                  return localName;
-                },
-              },
-            },
+            // options: {
+            //   modules: {
+            //     // 自定义css名称
+            //     getLocalIdent: (context, localIdentName, localName) => {
+            //       const match = context.resourcePath.match(/src(.*)/);
+            //       if (match && match[1]) {
+            //         const antdProPath = match[1].replace('.less', '');
+            //         const arr = slash(antdProPath)
+            //           .split('/')
+            //           .map((a) => a.replace(/([A-Z])/g, '-$1'))
+            //           .map((a) => a.toLowerCase());
+            //         return `${'demo'}${arr.join('-')}-${localName}`.replace(/--/g, '-');
+            //       }
+            //       return localName;
+            //     },
+            //   },
+            // },
           },
           {
             loader: 'less-loader',

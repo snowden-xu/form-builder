@@ -1,6 +1,6 @@
 // 第三方
-import React from 'react';
-import { has } from 'lodash';
+import React, { forwardRef } from 'react';
+import { has, pick, memoize } from 'lodash';
 import { Form, Input, Tooltip, Icon } from 'antd';
 const FormItem = Form.Item;
 
@@ -20,8 +20,18 @@ const getValue = (obj, namePath) => {
   return current;
 };
 
+const getWrappedComponentWithForwardRef = memoize((Comp) =>
+  forwardRef((props, ref) => {
+    return (
+      <span ref={ref}>
+        <Comp {...props} />
+      </span>
+    );
+  })
+);
+
 function FormBuilderField(props) {
-  console.log(props, 'FormBuilderField');
+  // console.log(props, 'FormBuilderField');
   const { field, form, config } = props;
 
   const label = field.tooltip ? (
@@ -29,24 +39,38 @@ function FormBuilderField(props) {
       <Tooltip title={field.tooltip}>
         <Icon type="info-circle" style={{ marginRight: 5 }} />
       </Tooltip>
-      {field.label}
+      <span title={field.label}>{field.label}</span>
     </span>
   ) : (
     field.label
   );
 
-  let formItemLayout = {
-    labelCol: { span: field.formItemLayout[0] },
-    wrapperCol: { span: field.formItemLayout[1] },
-  };
+  let formItemLayout = field.formItemLayout || (field.label ? getValue(config, 'formItemLayout') || [8, 16] : null);
+  if (Array.isArray(formItemLayout) && formItemLayout.length >= 2) {
+    formItemLayout = {
+      labelCol: { span: formItemLayout[0] },
+      wrapperCol: { span: formItemLayout[1] },
+    };
+  }
+
+  const isFieldViewMode = config.viewMode || field.readOnly;
 
   const formItemProps = {
     key: field.key,
     ...(config.formItemLayout !== null ? formItemLayout : {}),
     label,
+    ...pick(field, ['extra']),
     // required: true
     // ...pick(field,['colon','extra','hasFeedback','help','htmlFor','validateStatus'])
   };
+
+  if (field.colSpan && formItemProps.labelCol && !field.formItemLayout) {
+    const labelCol = Math.round(formItemProps.labelCol.span / field.colSpan);
+    Object.assign(formItemProps, {
+      labelCol: { span: labelCol },
+      wrapperCol: { span: 24 - labelCol },
+    });
+  }
 
   let initialValue;
   const initialValues = config.initialValues || {};
@@ -66,14 +90,37 @@ function FormBuilderField(props) {
     ...field.fieldProps,
   };
 
-  console.log(fieldProps, 'fieldProps');
+  // 预览模式
+  if (isFieldViewMode) {
+    let viewEle = null;
+    const formValues = form ? form.getFieldsValue() : {};
+    let viewValue = has(formValues, field.key) ? getValue(formValues, field.key) : initialValue;
+    if (!viewEle) {
+      viewEle = <span>{String(viewValue) || ''}</span>;
+    }
+    return <FormItem {...formItemProps}>{viewEle}</FormItem>;
+  }
 
+  // console.log(fieldProps, 'fieldProps');
+  const cp = field.componentProps || {};
+  const componentProps = {
+    // ...pick(field, ['placeholder', 'type', 'className', 'class', 'onChange']),
+    disabled: field.disabled || config.disabled,
+    ...cp,
+  };
   let FieldComponent = field.component || Input;
+
+  if (field.forwardRef) {
+    FieldComponent = getWrappedComponentWithForwardRef(FieldComponent);
+  }
+
   const element = (
-    <FieldComponent style={{ width: '100%' }} {...field.componentProps}>
+    <FieldComponent style={{ width: '100%' }} {...componentProps}>
       {field.children || null}
     </FieldComponent>
   );
+
+  // console.log(FieldComponent, 'FieldComponent');
 
   return <FormItem {...formItemProps}>{form.getFieldDecorator(field.key, fieldProps)(element)}</FormItem>;
 }
