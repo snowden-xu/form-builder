@@ -419,7 +419,7 @@ const sourceData = {
         category: 'SYSTEM',
         valueNum: 8,
         valueType: 'DATE',
-        valueFormat: 'YYYY-MM-DD',
+        valueFormat: 'YYYY-MM-DD HH:mm:ss',
         dispName: '计划开始日期',
         dispType: 'DATE',
         dispOrder: 6,

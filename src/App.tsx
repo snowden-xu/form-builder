@@ -1,5 +1,6 @@
 // 第三方
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import moment from 'moment';
 import { Form, Button, Input, Row, Col } from 'antd';
 
 // 自定义
@@ -56,10 +57,12 @@ function normalizeFields(formDefines) {
       label: item.i18nValue, // i18nValue
       key: item.name, // name
       component: componentMap[item.dispType], // dispType
+      componentType: componentMap[item.dispType],
       required: Boolean(item.required), // required
       tooltip: item.hintMsg, // hintMsg
       options: normalizeOptions(item.dictionary?.dictionaryEntries), // dictionaryEntries
       disabled: Boolean(item.readOnly),
+      // readOnly: true,
       // componentProps: {
       //   ...componentMap[item.dispType],
       // }, // dispType
@@ -106,7 +109,6 @@ function normalizeFields(formDefines) {
 
 const CreateForm = Form.create()(
   React.forwardRef((props, ref) => {
-    console.log(props, 'props');
     React.useImperativeHandle(ref, () => ({ form: props.form }));
     const handleSubmit = () => {
       props.form.validateFields((err: any, values: any) => {
@@ -119,7 +121,12 @@ const CreateForm = Form.create()(
     return (
       <>
         <Form>
-          <FormBuilder form={props.form} config={props.config} viewMode={false} />
+          <FormBuilder
+            form={props.form}
+            config={props.config}
+            viewMode={props.viewMode}
+            formDefineType={props.formDefineType}
+          />
         </Form>
         <Button onClick={handleSubmit}>submit</Button>
       </>
@@ -129,217 +136,229 @@ const CreateForm = Form.create()(
 
 const App = (props: any) => {
   const formRef = React.createRef();
-  const getFormConfig = (params) => {
-    const { columnList } = params;
-    const fields = normalizeFields(columnList);
-    console.log(fields, 'fields');
-
-    const [persons, setPersons] = useState([]);
-    // 部分字段自定义逻辑
-    fields.forEach((field) => {
-      console.log(field, 'field');
-      switch (field.key) {
-        case 'sponsor': {
-          const customField = {
-            initialValue: '浙江省抗癌协会',
-          };
-          Object.assign(field, customField);
-          break;
-        }
-        case 'siteId': {
-          const customField = {
-            options: [{ value: '2c94bba87aa424e1017af0ffa44b54e2', label: '001 株洲第四人民医院' }],
-            componentProps: {
-              ...field.componentProps,
-              onChange: (v) => {
-                console.log(v, 'v');
-                console.log(formRef.current.form.getFieldValue('sponsor'), "formRef.current.form.getField('sponsor')");
-                formRef.current.form.setFieldsValue({ principalInvestigator: v });
-                setPersons([{ value: '1', label: 'zc' }]);
-              },
-            },
-          };
-          Object.assign(field, customField);
-          break;
-        }
-        case 'inspectUser':
-          const customField = {
-            options: persons,
-          };
-          Object.assign(field, customField);
-          break;
-        default:
-          break;
-      }
-    });
-
-    const formConfig = {
-      columns: 1,
-      gutter: 10,
-      formItemLayout: [8, 16],
-      disabled: false,
-      fields,
-      // fields: [
-      //   {
-      //     key: 'singleLineNumber1',
-      //     label: '数字输入框数字输入框数字输入框数字输入框数字输入框数字输入框数字输入框',
-      //     component: 'number',
-      //     componentProps: {
-      //       style: { width: '100%' },
-      //     },
-      //     colSpan: 1,
-      //   },
-      //   {
-      //     key: 'singleLineText',
-      //     label: '单行文本单行文本单行文本单行文本单行文本单行文本单行文本',
-      //     required: true,
-      //     forwardRef: true,
-      //     component: DemoComponent,
-      //     fieldProps: {
-      //       siteId: '0702',
-      //       reload: () => {
-      //         console.log('reload');
-      //       },
-      //     },
-      //
-      //     // clear: 'right',
-      //
-      //     // formItemLayout: [8, 14],
-      //     // componentProps: {
-      //     //   maxlength: 150,
-      //     // },
-      //     // tooltip: <div>{111}</div>,
-      //     // // readOnly: true,
-      //     // // disabled: true,
-      //     // message: ' 22',
-      //     // extra: '我是第一个多余的付款单据看风景打卡练腹肌打开附件看到附件打开发',
-      //   },
-      //   {
-      //     key: 'textAreaText',
-      //     label: '多行文本多行文本多行文本多行文本多行文本多行文本多行文本',
-      //     required: true,
-      //     tooltip: 'This is the tooltip. This is the tooltip. ',
-      //     component: 'textArea',
-      //     // formItemLayout: [8, 16],
-      //     initialValue: '地方大师傅地方大师傅地方大师傅地方大师傅地方大师傅',
-      //     componentProps: {
-      //       maxLength: 20,
-      //       autoSize: { minRows: 2, maxRows: 5 },
-      //     },
-      //   },
-      //   {
-      //     key: 'textAreaText1',
-      //     label: '多行文本多行',
-      //     required: true,
-      //     tooltip: 'This is the tooltip. This is the tooltip. ',
-      //     component: 'textArea',
-      //   },
-      //   {
-      //     key: 'singleLineNumber',
-      //     label: '数字输入框',
-      //     component: 'number',
-      //     // componentProps: {
-      //     //   style: { width: '100%' },
-      //     // },
-      //     // formItemLayout: [8, 16],
-      //   },
-      //   {
-      //     key: 'phone',
-      //     label: '下拉框(单选)',
-      //     component: 'select',
-      //     options: [
-      //       { value: '1', label: 'apple' },
-      //       { value: '2', label: 'orange' },
-      //     ],
-      //     // formItemLayout: [8, 16],
-      //     componentProps: {
-      //       placeholder: '请选择',
-      //       allowClear: true,
-      //       showSearch: true,
-      //       optionFilterProp: 'children',
-      //     },
-      //   },
-      //   {
-      //     key: 'phone1',
-      //     label: '下拉框单选',
-      //     component: 'select',
-      //     options: [
-      //       { value: '1', label: 'apple1' },
-      //       { value: '2', label: 'orange1' },
-      //     ],
-      //     // children: [
-      //     //   { value: '1', label: 'apple1111' },
-      //     //   { value: '2', label: 'orange111' },
-      //     // ].map((key) => <Option key={key.value}>{key.label}</Option>),
-      //     // formItemLayout: [8, 16],
-      //     componentProps: {
-      //       placeholder: '请选择',
-      //       allowClear: true,
-      //       showSearch: true,
-      //       optionFilterProp: 'children',
-      //     },
-      //   },
-      //   {
-      //     key: 'phone2',
-      //     label: '下拉框多选',
-      //     component: 'select',
-      //     options: [
-      //       { value: '1', label: 'apple2' },
-      //       { value: '2', label: 'orange2' },
-      //     ],
-      //     componentProps: {
-      //       mode: 'multiple',
-      //       placeholder: '请选择',
-      //       allowClear: true,
-      //       showSearch: true,
-      //       optionFilterProp: 'children',
-      //     },
-      //     // formItemLayout: [8, 16],
-      //   },
-      //   {
-      //     key: 'phone3',
-      //     label: '日期',
-      //     component: 'date-picker',
-      //     required: true,
-      //     componentProps: {
-      //       format: 'YYYY-MM-DD',
-      //       placeholder: '请选择日期',
-      //     },
-      //     // formItemLayout: [8, 16],
-      //   },
-      //   {
-      //     key: 'phone4',
-      //     label: '年月日时分',
-      //     component: 'date-picker',
-      //     required: true,
-      //     componentProps: {
-      //       format: 'YYYY-MM-DD HH:mm',
-      //       placeholder: '请选择日期',
-      //     },
-      //     // formItemLayout: [8, 16],
-      //   },
-      //   {
-      //     key: 'phone5',
-      //     label: '年月日时',
-      //     component: 'date-picker',
-      //     required: true,
-      //     componentProps: {
-      //       format: 'YYYY-MM-DD HH',
-      //       style: { width: '100%' },
-      //       placeholder: '请选择日期',
-      //     },
-      //     // formItemLayout: [8, 16],
-      //   },
-      // ],
-      initialValues: {
-        sponsor: '浙江省抗癌协会',
-        // singleLineText: '老子是默认值',
-        // phone1: '1',
-        // phone2: ['1', '2'],
-      },
-    };
-    return formConfig;
-  };
+  // const { columnList } = sourceData;
+  const [persons, setPersons] = useState([]);
+  // const getFormConfig = (params) => {
+  //   // const { columnList } = params;
+  //   const fields = normalizeFields(columnList);
+  //   console.log(fields, 'fields');
+  //
+  //   // 部分字段自定义逻辑
+  //   fields.forEach((field) => {
+  //     console.log(field, 'field');
+  //     switch (field.key) {
+  //       case 'sponsor': {
+  //         const customField = {
+  //           initialValue: '浙江省抗癌协会',
+  //         };
+  //         Object.assign(field, customField);
+  //         break;
+  //       }
+  //       case 'siteId': {
+  //         const customField = {
+  //           options: [{ value: '2c94bba87aa424e1017af0ffa44b54e2', label: '001 株洲第四人民医院' }],
+  //           componentProps: {
+  //             ...field.componentProps,
+  //             onChange: (v) => {
+  //               console.log(v, 'v');
+  //               console.log(formRef.current.form.getFieldValue('sponsor'), "formRef.current.form.getField('sponsor')");
+  //               formRef.current.form.setFieldsValue({ principalInvestigator: v });
+  //               setPersons([{ value: '1', label: 'zc' }]);
+  //             },
+  //           },
+  //         };
+  //         Object.assign(field, customField);
+  //         break;
+  //       }
+  //       case 'inspectUser':
+  //         const customField = {
+  //           options: persons,
+  //         };
+  //         Object.assign(field, customField);
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   });
+  //
+  //   const formConfig = {
+  //     columns: 2,
+  //     gutter: 10,
+  //     formItemLayout: [8, 16],
+  //     disabled: false,
+  //     fields,
+  //     // fields: [
+  //     //   {
+  //     //     key: 'singleLineNumber1',
+  //     //     label: '数字输入框数字输入框数字输入框数字输入框数字输入框数字输入框数字输入框',
+  //     //     component: 'number',
+  //     //     componentProps: {
+  //     //       style: { width: '100%' },
+  //     //     },
+  //     //     colSpan: 1,
+  //     //   },
+  //     //   {
+  //     //     key: 'singleLineText',
+  //     //     label: '单行文本单行文本单行文本单行文本单行文本单行文本单行文本',
+  //     //     required: true,
+  //     //     forwardRef: true,
+  //     //     component: DemoComponent,
+  //     //     fieldProps: {
+  //     //       siteId: '0702',
+  //     //       reload: () => {
+  //     //         console.log('reload');
+  //     //       },
+  //     //     },
+  //     //
+  //     //     // clear: 'right',
+  //     //
+  //     //     // formItemLayout: [8, 14],
+  //     //     // componentProps: {
+  //     //     //   maxlength: 150,
+  //     //     // },
+  //     //     // tooltip: <div>{111}</div>,
+  //     //     // // readOnly: true,
+  //     //     // // disabled: true,
+  //     //     // message: ' 22',
+  //     //     // extra: '我是第一个多余的付款单据看风景打卡练腹肌打开附件看到附件打开发',
+  //     //   },
+  //     //   {
+  //     //     key: 'textAreaText',
+  //     //     label: '多行文本多行文本多行文本多行文本多行文本多行文本多行文本',
+  //     //     required: true,
+  //     //     tooltip: 'This is the tooltip. This is the tooltip. ',
+  //     //     component: 'textArea',
+  //     //     // formItemLayout: [8, 16],
+  //     //     initialValue: '地方大师傅地方大师傅地方大师傅地方大师傅地方大师傅',
+  //     //     componentProps: {
+  //     //       maxLength: 20,
+  //     //       autoSize: { minRows: 2, maxRows: 5 },
+  //     //     },
+  //     //   },
+  //     //   {
+  //     //     key: 'textAreaText1',
+  //     //     label: '多行文本多行',
+  //     //     required: true,
+  //     //     tooltip: 'This is the tooltip. This is the tooltip. ',
+  //     //     component: 'textArea',
+  //     //   },
+  //     //   {
+  //     //     key: 'singleLineNumber',
+  //     //     label: '数字输入框',
+  //     //     component: 'number',
+  //     //     // componentProps: {
+  //     //     //   style: { width: '100%' },
+  //     //     // },
+  //     //     // formItemLayout: [8, 16],
+  //     //   },
+  //     //   {
+  //     //     key: 'phone',
+  //     //     label: '下拉框(单选)',
+  //     //     component: 'select',
+  //     //     options: [
+  //     //       { value: '1', label: 'apple' },
+  //     //       { value: '2', label: 'orange' },
+  //     //     ],
+  //     //     // formItemLayout: [8, 16],
+  //     //     componentProps: {
+  //     //       placeholder: '请选择',
+  //     //       allowClear: true,
+  //     //       showSearch: true,
+  //     //       optionFilterProp: 'children',
+  //     //     },
+  //     //   },
+  //     //   {
+  //     //     key: 'phone1',
+  //     //     label: '下拉框单选',
+  //     //     component: 'select',
+  //     //     options: [
+  //     //       { value: '1', label: 'apple1' },
+  //     //       { value: '2', label: 'orange1' },
+  //     //     ],
+  //     //     // children: [
+  //     //     //   { value: '1', label: 'apple1111' },
+  //     //     //   { value: '2', label: 'orange111' },
+  //     //     // ].map((key) => <Option key={key.value}>{key.label}</Option>),
+  //     //     // formItemLayout: [8, 16],
+  //     //     componentProps: {
+  //     //       placeholder: '请选择',
+  //     //       allowClear: true,
+  //     //       showSearch: true,
+  //     //       optionFilterProp: 'children',
+  //     //     },
+  //     //   },
+  //     //   {
+  //     //     key: 'phone2',
+  //     //     label: '下拉框多选',
+  //     //     component: 'select',
+  //     //     options: [
+  //     //       { value: '1', label: 'apple2' },
+  //     //       { value: '2', label: 'orange2' },
+  //     //     ],
+  //     //     componentProps: {
+  //     //       mode: 'multiple',
+  //     //       placeholder: '请选择',
+  //     //       allowClear: true,
+  //     //       showSearch: true,
+  //     //       optionFilterProp: 'children',
+  //     //     },
+  //     //     // formItemLayout: [8, 16],
+  //     //   },
+  //     //   {
+  //     //     key: 'phone3',
+  //     //     label: '日期',
+  //     //     component: 'date-picker',
+  //     //     required: true,
+  //     //     componentProps: {
+  //     //       format: 'YYYY-MM-DD',
+  //     //       placeholder: '请选择日期',
+  //     //     },
+  //     //     // formItemLayout: [8, 16],
+  //     //   },
+  //     //   {
+  //     //     key: 'phone4',
+  //     //     label: '年月日时分',
+  //     //     component: 'date-picker',
+  //     //     required: true,
+  //     //     componentProps: {
+  //     //       format: 'YYYY-MM-DD HH:mm',
+  //     //       placeholder: '请选择日期',
+  //     //     },
+  //     //     // formItemLayout: [8, 16],
+  //     //   },
+  //     //   {
+  //     //     key: 'phone5',
+  //     //     label: '年月日时',
+  //     //     component: 'date-picker',
+  //     //     required: true,
+  //     //     componentProps: {
+  //     //       format: 'YYYY-MM-DD HH',
+  //     //       style: { width: '100%' },
+  //     //       placeholder: '请选择日期',
+  //     //     },
+  //     //     // formItemLayout: [8, 16],
+  //     //   },
+  //     // ],
+  //     initialValues: {
+  //       sponsor: '浙江省抗癌协会',
+  //       siteId: '2c94bba87aa424e1017af0ffa44b54e2',
+  //       principalInvestigator: '张三、李四',
+  //       inspectTypeId: '2c948aa57aec2165017af0f961a803c6',
+  //       collaborateInspectTypeId: 'ff8081817c83b5aa017c83b5aa020000',
+  //       startTime: moment(1646622163296),
+  //       endTime: moment(1646622192584),
+  //       durationHour: 10,
+  //       confirmContent: '2c948aa57aec2165017af0f8791000d1',
+  //       planOtherContent: '别瞎搞',
+  //       inspectUser: '',
+  //       projectUsers: '2c94bb067c5f76e5017cbfbc41d505a7',
+  //       siteUsers: '',
+  //       aaa: '2c948aa57aec2165017af0f887f201b9',
+  //       cszd: '1',
+  //     },
+  //   };
+  //   return formConfig;
+  // };
 
   // const arr = [
   //   {
@@ -388,9 +407,63 @@ const App = (props: any) => {
   //
   // console.log(newArr, 'newArr');
 
+  const [columnList, setColumnList] = useState([]);
+
+  useEffect(() => {
+    setColumnList(sourceData.data.columnList);
+  }, []);
+
+  const formConfig = {
+    columns: 2,
+    // gutter: 10,
+    // formItemLayout: [8, 16],
+    // disabled: true,
+    formDefines: columnList,
+    initialValues: {
+      sponsor: '浙江省抗癌协会',
+      siteId: '2c94bba87aa424e1017af0ffa44b54e2',
+      principalInvestigator: '张三、李四',
+      inspectTypeId: '2c948aa57aec2165017af0f961a803c6',
+      collaborateInspectTypeId: 'ff8081817c83b5aa017c83b5aa020000',
+      startTime: 1646622163296,
+      endTime: 1646622192584,
+      durationHour: 10,
+      confirmContent: '2c948aa57aec2165017af0f8791000d1',
+      planOtherContent: '别瞎搞',
+      inspectUser: '',
+      projectUsers: '2c94bb067c5f76e5017cbfbc41d505a7',
+      siteUsers: '',
+      aaa: '2c948aa57aec2165017af0f887f201b9',
+      cszd: '1',
+    },
+    customFields: [
+      {
+        fieldName: 'siteId',
+        customParams: {
+          options: [{ value: '2c94bba87aa424e1017af0ffa44b54e2', label: '001 株洲第四人民医院' }],
+          componentProps: {
+            allowClear: false,
+            onChange: (v) => {
+              console.log(v, 'v');
+              console.log(formRef.current.form.getFieldValue('sponsor'), "formRef.current.form.getField('sponsor')");
+              formRef.current.form.setFieldsValue({ principalInvestigator: v });
+              setPersons([{ value: '1', label: 'zc' }]);
+            },
+          },
+        },
+      },
+      {
+        fieldName: 'inspectUser',
+        customParams: {
+          tooltip: 111,
+        },
+      },
+    ],
+  };
+
   return (
-    <div style={{ width: 600, margin: '0 auto' }}>
-      <CreateForm wrappedComponentRef={formRef} config={getFormConfig(sourceData.data)} viewMode={false} />
+    <div style={{ width: 1200, margin: '0 auto' }}>
+      <CreateForm wrappedComponentRef={formRef} formDefineType="tableColumn" config={formConfig} viewMode={false} />
       {/*<Form>*/}
       {/*  <FormBuilder form={props.form} config={formConfig} viewMode={false} />*/}
       {/*</Form>*/}

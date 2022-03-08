@@ -3,6 +3,7 @@ import React, { forwardRef } from 'react';
 import { has, pick, memoize } from 'lodash';
 import { Form, Input, Tooltip, Icon } from 'antd';
 const FormItem = Form.Item;
+import moment from 'moment';
 
 // 自定义
 const getValue = (obj, namePath) => {
@@ -80,6 +81,10 @@ function FormBuilderField(props) {
     initialValue = getValue(initialValues, field.key);
   }
 
+  if (initialValue && field.componentType === 'date-picker') {
+    initialValue = moment(initialValue);
+  }
+
   const rules = [...(field.rules || [])];
   if (field.required) {
     rules.unshift({ required: true, message: field.message || `${field.label}为必填项` });
@@ -94,11 +99,43 @@ function FormBuilderField(props) {
   if (isFieldViewMode) {
     let viewEle = null;
     const formValues = form ? form.getFieldsValue() : {};
-    let viewValue = has(formValues, field.key) ? getValue(formValues, field.key) : initialValue;
+    let viewValue = has(formValues, field.key || field.name.join('.'))
+      ? getValue(formValues, formItemProps.name || field.key)
+      : initialValue;
+
+    switch (field.componentType) {
+      // 下拉框类型
+      case 'select': {
+        const found = field.options.find((opt) => opt.value === viewValue);
+        if (found) {
+          viewValue = found.label;
+        }
+        break;
+      }
+      // 日期类型
+      case 'date-picker': {
+        viewValue = (viewValue && moment(viewValue).format(field.componentProps.format)) || '';
+        break;
+      }
+      default: {
+        break;
+      }
+    }
     if (!viewEle) {
-      viewEle = <span>{String(viewValue) || ''}</span>;
+      viewEle = <span className="antd-form-builder-string-content">{String(viewValue) || ''}</span>;
+    }
+    if (form && field.readOnly) {
+      const ele = <span className="antd-form-builder-read-only-content">{viewEle}</span>;
+      return <FormItem {...formItemProps}>{form.getFieldDecorator(field.id || field.key, fieldProps)(ele)}</FormItem>;
     }
     return <FormItem {...formItemProps}>{viewEle}</FormItem>;
+    // let viewEle = null;
+    // const formValues = form ? form.getFieldsValue() : {};
+    // let viewValue = has(formValues, field.key) ? getValue(formValues, field.key) : initialValue;
+    // if (!viewEle) {
+    //   viewEle = <span>{String(viewValue) || ''}</span>;
+    // }
+    // return <FormItem {...formItemProps}>{viewEle}</FormItem>;
   }
 
   // console.log(fieldProps, 'fieldProps');
